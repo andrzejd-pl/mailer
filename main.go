@@ -37,9 +37,10 @@ func main() {
 			buff := bytes.NewBufferString("")
 			_, _ = fmt.Fprintf(buff, "%v", data)
 			_ = sendMail(buff.String())
+			lastState = len(data)
 		}
 
-		time.Sleep(time.Second * 10)
+		time.Sleep(time.Minute * 10)
 	}
 }
 
