@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/smtp"
 	"net/url"
+	"os"
 	"time"
 )
 
@@ -32,12 +33,13 @@ func main() {
 	lastState := 0
 	for {
 		data := getPackageState()
+		dataSize := len(data)
 
-		if lastState < len(data) {
+		if lastState < dataSize {
 			buff := bytes.NewBufferString("")
 			_, _ = fmt.Fprintf(buff, "%v", data)
 			_ = sendMail(buff.String())
-			lastState = len(data)
+			lastState = dataSize
 		}
 
 		time.Sleep(time.Minute * 10)
@@ -141,9 +143,11 @@ func fieldset(tt html.TokenType, tokenizer *html.Tokenizer, state *State, data [
 }
 
 func sendMail(content string) error {
-	from := "dybowski.andrzej1@gmail.com"
-	pass := "qgomtzxizltovadz"
-	to := "dybowski@andrzejd.pl"
+	from := os.Getenv("EMAIL_FROM")
+	pass := os.Getenv("EMAIL_PASS")
+	to := os.Getenv("EMAIL_TO")
+	smtpHost := os.Getenv("SMTP_HOST")
+	smtpPort := os.Getenv("SMTP_PORT")
 
 	msg := "From: " + from + "\n" +
 		"To: " + to + "\n" +
@@ -153,7 +157,9 @@ func sendMail(content string) error {
 		"Content-Transfer-Encoding: base64\n\n" +
 		base64.StdEncoding.EncodeToString([]byte(content))
 
-	return smtp.SendMail("smtp.gmail.com:587",
-		smtp.PlainAuth("", from, pass, "smtp.gmail.com"),
-		from, []string{to}, []byte(msg))
+	return smtp.SendMail(smtpHost+":"+smtpPort,
+		smtp.PlainAuth("", from, pass, smtpHost),
+		from,
+		[]string{to},
+		[]byte(msg))
 }
