@@ -36,13 +36,12 @@ func main() {
 		dataSize := len(data)
 
 		if lastState < dataSize {
-			buff := bytes.NewBufferString("")
-			_, _ = fmt.Fprintf(buff, "%v", data)
-			_ = sendMail(buff.String())
+			_ = sendMail(makeHtmlTable(data))
+			fmt.Println(makeHtmlTable(data))
 			lastState = dataSize
 		}
 
-		time.Sleep(time.Minute * 10)
+		time.Sleep(time.Millisecond * 1000 * 60 * 10)
 	}
 }
 
@@ -142,6 +141,25 @@ func fieldset(tt html.TokenType, tokenizer *html.Tokenizer, state *State, data [
 	return data
 }
 
+func makeHtmlTable(data []Data) string {
+	buff := bytes.NewBufferString("<table><tbody>")
+
+	for _, el := range data {
+		_, _ = fmt.Fprint(buff, "<tr>")
+		_, _ = fmt.Fprintf(buff,
+			"<td>%s</td><td>%s</td><td>%s</td><td>%s</td>",
+			el.Date,
+			el.Time,
+			el.Description,
+			el.Department)
+		_, _ = fmt.Fprintln(buff, "</tr>")
+	}
+
+	_, _ = fmt.Fprintln(buff, "</tbody></table>")
+
+	return buff.String()
+}
+
 func sendMail(content string) error {
 	from := os.Getenv("EMAIL_FROM")
 	pass := os.Getenv("EMAIL_PASS")
@@ -153,7 +171,7 @@ func sendMail(content string) error {
 		"To: " + to + "\n" +
 		"Subject: Paczka DPD\n" +
 		"MIME-Version: 1.0\n" +
-		"Content-Type: text/plain; charset=\"utf-8\"\n" +
+		"Content-Type: text/html; charset=\"utf-8\"\n" +
 		"Content-Transfer-Encoding: base64\n\n" +
 		base64.StdEncoding.EncodeToString([]byte(content))
 

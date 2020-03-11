@@ -1,6 +1,8 @@
 FROM andrzejd/go-env
 
-RUN go get -u github.com/andrzejd-pl/mailer
-RUN go install github.com/andrzejd-pl/mailer
+WORKDIR /go/src/mailer
+COPY . ./
+RUN go get -d ./...
+RUN go install .
 
 CMD ["mailer"]
